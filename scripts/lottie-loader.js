@@ -7,47 +7,46 @@ import lottie from 'lottie-web';
 
 export class LottieLoader {
   constructor() {
-    this.animations = new Map();
-    this.cache = new Map();
+    this.animations = new Map(); // Stores persistent animation instances
+    this.cache = new Map();      // Caches animation data (JSON)
+    this.tempAnimationIdCounter = 0;
   }
 
   /**
-   * Load a Lottie animation
-   * @param {string} name - Unique name for the animation
-   * @param {string} path - Path to the JSON file
-   * @param {Object} options - Animation options
-   * @returns {Promise} - Resolves to animation instance
+   * Fetches animation data from path or cache.
+   * @param {string} path - Path to the JSON file.
+   * @returns {Promise<Object>} - Resolves to animation data.
    */
-  async load(name, path, options = {}) {
-    // Check cache first
+  async getAnimationData(path) {
     if (this.cache.has(path)) {
-      console.log(`📦 Using cached animation: ${name}`);
-      const cachedData = this.cache.get(path);
-      return this.createFromData(name, cachedData, options);
+      return this.cache.get(path);
     }
 
     try {
       const response = await fetch(path);
       if (!response.ok) {
-        throw new Error(`Failed to load animation: ${path}`);
+        throw new Error(`Failed to load animation data: ${path}`);
       }
-      
       const animationData = await response.json();
-      
-      // Cache the data
       this.cache.set(path, animationData);
-      
-      return this.createFromData(name, animationData, options);
+      return animationData;
     } catch (error) {
-      console.warn(`⚠️ Could not load animation: ${name} from ${path}`, error);
+      console.error(`Error fetching animation data for ${path}:`, error);
       return null;
     }
   }
 
   /**
-   * Create animation from cached data
+   * Load a persistent Lottie animation.
+   * @param {string} name - Unique name for the animation.
+   * @param {string} path - Path to the JSON file.
+   * @param {Object} options - Animation options (container, loop, autoplay, etc.).
+   * @returns {Promise<Object|null>} - Resolves to animation instance or null if failed.
    */
-  createFromData(name, animationData, options) {
+  async load(name, path, options = {}) {
+    const animationData = await this.getAnimationData(path);
+    if (!animationData) return null;
+
     const {
       container,
       loop = true,
@@ -56,7 +55,7 @@ export class LottieLoader {
     } = options;
 
     if (!container) {
-      console.warn(`No container for animation: ${name}`);
+      console.warn(`No container provided for persistent animation: ${name}`);
       return null;
     }
 
@@ -68,21 +67,57 @@ export class LottieLoader {
       animationData: animationData
     });
 
-    // Store reference
     this.animations.set(name, animation);
-
     return animation;
   }
 
   /**
-   * Get a loaded animation by name
+   * Play a temporary, one-shot Lottie animation on a specific element.
+   * The animation instance is destroyed after completion.
+   * @param {string} animationName - The name of the animation (e.g., 'sparkle', 'key_correct').
+   * @param {string} path - Path to the Lottie JSON file.
+   * @param {HTMLElement} containerElement - The DOM element where the animation should play.
+   * @param {Object} options - Options for the animation (e.g., loop, speed).
+   * @returns {Promise<Object|null>} - Resolves to the animation instance, or null if it fails.
+   */
+  async playTemporaryAnimation(animationName, path, containerElement, options = {}) {
+    const animationData = await this.getAnimationData(path);
+    if (!animationData) return null;
+
+    const tempId = `${animationName}-${this.tempAnimationIdCounter++}`;
+
+    const anim = lottie.loadAnimation({
+      container: containerElement,
+      renderer: options.renderer || 'svg',
+      loop: options.loop || false,
+      autoplay: false, // We'll play it manually
+      animationData: animationData,
+      name: tempId, // Assign a temporary name for tracking
+    });
+
+    if (options.speed) {
+      anim.setSpeed(options.speed);
+    }
+
+    // Remove the animation instance from lottie-web's internal registry after it completes
+    anim.addEventListener('complete', () => {
+      anim.destroy();
+      // console.log(`Temporary animation ${tempId} destroyed.`);
+    });
+
+    anim.play();
+    return anim;
+  }
+
+  /**
+   * Get a loaded persistent animation by name.
    */
   get(name) {
     return this.animations.get(name);
   }
 
   /**
-   * Play an animation
+   * Play a persistent animation.
    */
   play(name) {
     const animation = this.animations.get(name);
@@ -92,7 +127,7 @@ export class LottieLoader {
   }
 
   /**
-   * Pause an animation
+   * Pause a persistent animation.
    */
   pause(name) {
     const animation = this.animations.get(name);
@@ -102,7 +137,7 @@ export class LottieLoader {
   }
 
   /**
-   * Stop an animation
+   * Stop a persistent animation.
    */
   stop(name) {
     const animation = this.animations.get(name);
@@ -112,7 +147,7 @@ export class LottieLoader {
   }
 
   /**
-   * Go to a specific frame
+   * Go to a specific frame of a persistent animation.
    */
   goToFrame(name, frame, isFrame = true) {
     const animation = this.animations.get(name);
@@ -122,7 +157,7 @@ export class LottieLoader {
   }
 
   /**
-   * Play a segment
+   * Play a segment of a persistent animation.
    */
   playSegment(name, startFrame, endFrame, forceFlag = true) {
     const animation = this.animations.get(name);
@@ -132,7 +167,7 @@ export class LottieLoader {
   }
 
   /**
-   * Set speed
+   * Set speed for a persistent animation.
    */
   setSpeed(name, speed) {
     const animation = this.animations.get(name);
@@ -142,7 +177,7 @@ export class LottieLoader {
   }
 
   /**
-   * Set direction (1 for forward, -1 for reverse)
+   * Set direction for a persistent animation (1 for forward, -1 for reverse).
    */
   setDirection(name, direction) {
     const animation = this.animations.get(name);
@@ -152,7 +187,7 @@ export class LottieLoader {
   }
 
   /**
-   * Add event listener
+   * Add event listener to a persistent animation.
    */
   on(name, event, callback) {
     const animation = this.animations.get(name);
@@ -162,7 +197,7 @@ export class LottieLoader {
   }
 
   /**
-   * Destroy an animation
+   * Destroy a persistent animation.
    */
   destroy(name) {
     const animation = this.animations.get(name);
@@ -173,7 +208,7 @@ export class LottieLoader {
   }
 
   /**
-   * Destroy all animations
+   * Destroy all persistent animations.
    */
   destroyAll() {
     this.animations.forEach((animation, name) => {

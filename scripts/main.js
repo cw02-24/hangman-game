@@ -4,7 +4,7 @@
 
 import { Game } from './game.js';
 import { AnimationController } from './animations.js';
-import { LottieLoader }s from './lottie-loader.js';
+import { LottieLoader } from './lottie-loader.js'; // Corrected import
 
 class App {
   constructor() {
@@ -38,9 +38,9 @@ class App {
 
   async preloadAnimations() {
     const animationsToLoad = [
-      { name: 'loading', path: '/lottie/loading.json', container: 'loading-spinner', loop: true },
-      { name: 'dust', path: '/lottie/dust_particles.json', container: 'dust-layer', loop: true },
-      { name: 'puppet_idle', path: '/lottie/puppet_states.json', container: 'menu-puppet', loop: true, autoplay: true }
+      { name: 'loading', path: '/assets/lottie/loading.json', container: 'loading-spinner', loop: true }, // Corrected path
+      { name: 'dust', path: '/assets/lottie/dust_particles.json', container: 'dust-layer', loop: true }, // Corrected path
+      { name: 'puppet_idle', path: '/assets/lottie/puppet_states.json', container: 'menu-puppet', loop: true, autoplay: true } // Corrected path
     ];
 
     for (const anim of animationsToLoad) {

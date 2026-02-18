@@ -2,6 +2,8 @@
  * Shadow Circus Hangman - Game Logic
  */
 
+import { UI } from './ui.js';
+
 // Word list for the game
 const WORDS = [
   'CIRCUS', 'PUPPET', 'MAGIC', 'SHADOW', 'THEATER',
@@ -16,42 +18,31 @@ export class Game {
   constructor(animations, lottieLoader) {
     this.animations = animations;
     this.lottieLoader = lottieLoader;
+    this.ui = new UI(lottieLoader);
     this.word = '';
     this.guessedLetters = new Set();
     this.wrongGuesses = 0;
     this.maxWrongGuesses = 5;
     this.score = 0;
     this.isGameOver = false;
-    this.keyboard = null;
-    this.wordDisplay = null;
-    this.scoreDisplay = null;
-    this.wrongCountDisplay = null;
-    this.tensionFill = null;
   }
 
-  async newGame() { // Made async to await loadGamePuppet()
+  async newGame() {
     // Reset state
     this.word = this.getRandomWord();
     this.guessedLetters = new Set();
     this.wrongGuesses = 0;
     this.isGameOver = false;
     
-    // Get DOM elements
-    this.keyboard = document.getElementById('keyboard');
-    this.wordDisplay = document.getElementById('word-display');
-    this.scoreDisplay = document.getElementById('score');
-    this.wrongCountDisplay = document.getElementById('wrong-count');
-    this.tensionFill = document.querySelector('.tension-fill');
-    
-    // Reset UI
-    this.renderKeyboard();
-    this.renderWord();
-    this.updateScore(0);
-    this.updateProgress();
+    // Render/Reset UI using the UI class
+    this.ui.renderKeyboard(this.guessedLetters, this.handleGuess.bind(this));
+    this.ui.renderWord(this.word, this.guessedLetters);
+    this.ui.updateScore(0);
+    this.ui.updateWrongGuessCount(this.wrongGuesses, this.maxWrongGuesses);
 
     // Load and reset puppet animation for the game screen
     await this.animations?.loadGamePuppet();
-    this.animations?.resetPuppet(); // This was already here, but now it will act on the loaded puppet.
+    this.animations?.resetPuppet();
     
     console.log('🎯 New game started. Word:', this.word);
   }
@@ -60,48 +51,17 @@ export class Game {
     return WORDS[Math.floor(Math.random() * WORDS.length)];
   }
 
-  renderKeyboard() {
-    if (!this.keyboard) return;
-    
-    const letters = 'QWERTYUIOPASDFGHJKLZXCVBNM';
-    this.keyboard.innerHTML = '';
-    
-    letters.split('').forEach(letter => {
-      const key = document.createElement('button');
-      key.className = 'key';
-      key.dataset.letter = letter;
-      key.textContent = letter;
-      key.addEventListener('click', () => this.handleGuess(letter));
-      this.keyboard.appendChild(key);
-    });
-  }
-
-  renderWord() {
-    if (!this.wordDisplay) return;
-    
-    this.wordDisplay.innerHTML = '';
-    
-    this.word.split('').forEach((letter, index) => {
-      const slot = document.createElement('div');
-      slot.className = 'letter-slot';
-      slot.dataset.index = index;
-      slot.dataset.letter = letter;
-      this.wordDisplay.appendChild(slot);
-    });
-  }
-
   handleGuess(letter) {
     if (this.isGameOver) return;
     if (this.guessedLetters.has(letter)) return;
     
     this.guessedLetters.add(letter);
-    const key = this.keyboard?.querySelector(`[data-letter="${letter}"]`);
     
     if (this.word.includes(letter)) {
       // Correct guess
-      key?.classList.add('correct');
-      this.revealLetters(letter);
-      this.animations?.onCorrectLetter(letter);
+      this.ui.updateKeyboardKey(letter, true);
+      const revealedIndexes = this.revealLetters(letter);
+      this.animations?.onCorrectLetter(letter, revealedIndexes); // Pass revealedIndexes for precise animation
       
       // Check win
       if (this.checkWin()) {
@@ -109,10 +69,10 @@ export class Game {
       }
     } else {
       // Wrong guess
-      key?.classList.add('wrong');
+      this.ui.updateKeyboardKey(letter, false);
       this.wrongGuesses++;
-      this.updateProgress();
-      this.animations?.onWrongLetter(this.wrongGuesses);
+      this.ui.updateWrongGuessCount(this.wrongGuesses, this.maxWrongGuesses);
+      this.animations?.onWrongLetter(this.wrongGuesses); // This is for Issue #10
       
       // Check lose
       if (this.wrongGuesses >= this.maxWrongGuesses) {
@@ -122,34 +82,37 @@ export class Game {
   }
 
   revealLetters(letter) {
-    const slots = this.wordDisplay?.querySelectorAll('.letter-slot');
-    slots?.forEach(slot => {
-      if (slot.dataset.letter === letter) {
-        slot.textContent = letter;
-        slot.classList.add('revealed');
+    const revealedIndexes = [];
+    for (let i = 0; i < this.word.length; i++) {
+      if (this.word[i] === letter) {
+        revealedIndexes.push(i);
       }
-    });
+    }
+    this.ui.revealLetterInWordDisplay(letter, revealedIndexes);
+    return revealedIndexes; // Return indexes for animation orchestration
   }
 
   checkWin() {
-    const slots = this.wordDisplay?.querySelectorAll('.letter-slot');
-    const allRevealed = Array.from(slots || []).every(slot => slot.classList.contains('revealed'));
-    return allRevealed;
+    for (const char of this.word) {
+      if (!this.guessedLetters.has(char)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   onWin() {
     this.isGameOver = true;
     const pointsEarned = (this.maxWrongGuesses - this.wrongGuesses + 1) * 100;
-    this.updateScore(this.score + pointsEarned);
+    this.ui.updateScore(this.score + pointsEarned);
     
     // Show victory screen
     setTimeout(() => {
       document.getElementById('victory-word').textContent = this.word;
-      document.getElementById('victory-score').textContent = this.score;
+      document.getElementById('victory-score').textContent = this.score.toString(); // Ensure it's a string
       this.animations?.playVictory();
       
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('victory-screen')?.classList.add('active');
+      this.ui.showScreen('victory-screen');
     }, 500);
   }
 
@@ -161,27 +124,8 @@ export class Game {
       document.getElementById('gameover-word').textContent = this.word;
       this.animations?.playGameOver();
       
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('gameover-screen')?.classList.add('active');
+      this.ui.showScreen('gameover-screen');
     }, 1000);
-  }
-
-  updateScore(newScore) {
-    this.score = newScore;
-    if (this.scoreDisplay) {
-      this.scoreDisplay.textContent = this.score;
-    }
-  }
-
-  updateProgress() {
-    if (this.wrongCountDisplay) {
-      this.wrongCountDisplay.textContent = `${this.wrongGuesses}/${this.maxWrongGuesses}`;
-    }
-    
-    if (this.tensionFill) {
-      const percentage = (this.wrongGuesses / this.maxWrongGuesses) * 100;
-      this.tensionFill.style.width = `${percentage}%`;
-    }
   }
 }
 

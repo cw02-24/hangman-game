@@ -15,7 +15,7 @@ export class AnimationController {
   // ==================== PUPPET ANIMATIONS ====================
 
   async loadGamePuppet() {
-    this.puppetAnimation = await this.lottieLoader.load('puppet_game', '/lottie/puppet_states.json', {
+    this.puppetAnimation = await this.lottieLoader.load('puppet_game', '/assets/lottie/puppet_states.json', {
       container: document.getElementById('puppet'),
       loop: false,
       autoplay: false
@@ -78,37 +78,32 @@ export class AnimationController {
 
   // ==================== GAME ANIMATIONS ====================
 
-  onCorrectLetter(letter) {
-    // Find the key and animate
-    const key = document.querySelector(`[data-letter="${letter}"]`);
-    if (key) {
-      gsap.to(key, {
-        scale: 1.1,
-        duration: 0.1,
-        yoyo: true,
-        repeat: 1
-      });
-    }
-
-    // Animate revealed letters
-    const slots = document.querySelectorAll('.letter-slot.revealed');
-    slots.forEach((slot, i) => {
-      if (slot.dataset.letter === letter) {
-        gsap.from(slot, {
-          scale: 1.3,
-          duration: 0.3,
-          delay: i * 0.05,
-          ease: 'back.out(2)'
-        });
+  // Refactored to accept revealedIndexes for precise animation
+  onCorrectLetter(letter, revealedIndexes) {
+    // No longer animating the key here, UI class handles Lottie for key.
+    // Animate *specific* revealed letters
+    revealedIndexes.forEach((index, i) => {
+      const slot = document.querySelector(`.letter-slot[data-index="${index}"]`);
+      if (slot) {
+        gsap.fromTo(slot, 
+          { scale: 0, opacity: 0 },
+          { 
+            scale: 1, 
+            opacity: 1, 
+            duration: 0.3, 
+            delay: i * 0.05, 
+            ease: 'back.out(2)', 
+            onComplete: () => {
+              // Ensure any text content is correctly set after animation if needed
+            }
+          }
+        );
       }
     });
-
-    // Play sparkle animation
-    this.playSparkle();
   }
 
   onWrongLetter(wrongCount) {
-    // Animate the key
+    // Animate the key - UI class handles Lottie for key. This is a generic CSS animation.
     const keys = document.querySelectorAll('.key.wrong');
     const lastKey = keys[keys.length - 1];
     
@@ -136,21 +131,21 @@ export class AnimationController {
 
   async playVictory() {
     // Load victory puppet animation
-    await this.lottieLoader.load('victory_puppet', '/lottie/puppet_victory.json', {
+    await this.lottieLoader.load('victory_puppet', '/assets/lottie/puppet_victory.json', {
       container: document.getElementById('victory-puppet'),
       loop: true,
       autoplay: true
     });
 
     // Load confetti
-    await this.lottieLoader.load('confetti', '/lottie/confetti.json', {
+    await this.lottieLoader.load('confetti', '/assets/lottie/confetti.json', {
       container: document.getElementById('confetti-container'),
       loop: true,
       autoplay: true
     });
 
     // Play victory star
-    this.lottieLoader.load('victory_star', '/lottie/victory.json', {
+    this.lottieLoader.load('victory_star', '/assets/lottie/victory.json', {
       container: document.querySelector('.victory-title'),
       loop: false,
       autoplay: true
@@ -182,7 +177,7 @@ export class AnimationController {
 
   async playGameOver() {
     // Load game over puppet animation
-    await this.lottieLoader.load('gameover_puppet', '/lottie/puppet_gameover.json', {
+    await this.lottieLoader.load('gameover_puppet', '/assets/lottie/puppet_gameover.json', {
       container: document.getElementById('gameover-puppet'),
       loop: false,
       autoplay: true
@@ -217,29 +212,8 @@ export class AnimationController {
 
   // ==================== UTILITY ANIMATIONS ====================
 
-  playSparkle() {
-    // Create a temporary sparkle element
-    const sparkle = document.createElement('div');
-    sparkle.className = 'sparkle-effect';
-    sparkle.style.cssText = `
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      pointer-events: none;
-      z-index: 100;
-    `;
-    document.body.appendChild(sparkle);
-
-    // Load sparkle animation
-    this.lottieLoader.load('sparkle_temp', '/lottie/sparkle.json', {
-      container: sparkle,
-      loop: false,
-      autoplay: true
-    });
-
-    // Remove after animation
-    setTimeout(() => sparkle.remove(), 500);
-  }
+  // playSparkle is now handled by UI.js through lottieLoader.playTemporaryAnimation
+  // and thus removed from here.
 
   // Screen transitions
   transitionTo(screenName, callback) {
