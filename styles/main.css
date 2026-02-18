@@ -429,6 +429,10 @@ h1, h2, h3 {
   color: var(--color-text-muted);
   cursor: default;
   opacity: 0.5;
+  transform: translateZ(-5px) translateY(2px); /* Added for receded effect */
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    inset 0 0 5px rgba(211, 47, 47, 0.2); /* Softened shadow */
 }
 
 .key:disabled {

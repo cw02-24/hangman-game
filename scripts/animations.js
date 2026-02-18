@@ -103,17 +103,7 @@ export class AnimationController {
   }
 
   onWrongLetter(wrongCount) {
-    // Animate the key - UI class handles Lottie for key. This is a generic CSS animation.
-    const keys = document.querySelectorAll('.key.wrong');
-    const lastKey = keys[keys.length - 1];
-    
-    if (lastKey) {
-      gsap.to(lastKey, {
-        scale: 0.9,
-        opacity: 0.5,
-        duration: 0.2
-      });
-    }
+    // The UI class handles Lottie for key, so no need for GSAP animation here for the key.
 
     // Update puppet state
     this.setPuppetState(wrongCount);
