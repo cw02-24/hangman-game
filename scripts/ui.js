@@ -1,6 +1,9 @@
 /**
- * Shadow Circus Hangman - UI Logic
+ * Shadow Circus Hangman - UI Controller
+ * Handles all direct DOM manipulation and UI rendering
  */
+
+import { LottieLoader } from './lottie-loader.js';
 
 export class UI {
   constructor(lottieLoader) {
@@ -10,84 +13,98 @@ export class UI {
     this.scoreDisplayElement = document.getElementById('score');
     this.wrongCountDisplayElement = document.getElementById('wrong-count');
     this.tensionFillElement = document.querySelector('.tension-fill');
+
+    // Ensure all screens are hidden initially except loading
+    this.screens = {
+      loading: document.getElementById('loading-screen'),
+      menu: document.getElementById('menu-screen'),
+      game: document.getElementById('game-screen'),
+      victory: document.getElementById('victory-screen'),
+      gameover: document.getElementById('gameover-screen'),
+    };
   }
 
-  renderKeyboard(guessedLetters, handleGuess) {
-    if (!this.keyboardElement) return;
+  showScreen(screenName) {
+    for (const key in this.screens) {
+      if (this.screens[key]) {
+        this.screens[key].classList.remove('active');
+      }
+    }
+    if (this.screens[screenName]) {
+      this.screens[screenName].classList.add('active');
+    }
+  }
 
+  renderKeyboard(guessedLetters, handleGuessCallback) {
+    if (!this.keyboardElement) return;
+    
     const letters = 'QWERTYUIOPASDFGHJKLZXCVBNM';
     this.keyboardElement.innerHTML = '';
-
+    
     letters.split('').forEach(letter => {
       const key = document.createElement('button');
       key.className = 'key';
       key.dataset.letter = letter;
       key.textContent = letter;
-      
-      // Apply correct/wrong styles if already guessed
+      key.disabled = guessedLetters.has(letter);
       if (guessedLetters.has(letter)) {
-        // We'll add logic here to differentiate correct/wrong later if needed,
-        // but for now, just mark it as guessed to disable further interaction.
-        // A full state will be managed by game.js and animations.js
-        key.classList.add('guessed'); 
-        key.disabled = true; // Disable interaction for already guessed letters
+        // Apply appropriate class if already guessed (e.g., correct/wrong handled by updateKeyboardKey)
+        // For initial render, just disable
       }
-
-      key.addEventListener('click', () => handleGuess(letter));
+      key.addEventListener('click', () => handleGuessCallback(letter));
       this.keyboardElement.appendChild(key);
     });
   }
 
+  updateKeyboardKey(letter, isCorrect) {
+    const key = this.keyboardElement?.querySelector(`[data-letter="${letter}"]`);
+    if (key) {
+      key.disabled = true;
+      if (isCorrect) {
+        key.classList.add('correct');
+        // Optional: play a short Lottie animation for correct key feedback
+        // this.lottieLoader.playTemporaryAnimation('key_correct', '/assets/lottie/key_correct.json', key);
+      } else {
+        key.classList.add('wrong');
+        // Optional: play a short Lottie animation for wrong key feedback
+        // this.lottieLoader.playTemporaryAnimation('key_wrong', '/assets/lottie/key_wrong.json', key);
+      }
+    }
+  }
+
   renderWord(word, guessedLetters) {
     if (!this.wordDisplayElement) return;
-
+    
     this.wordDisplayElement.innerHTML = '';
-
-    word.split('').forEach((letter, index) => {
+    
+    word.split('').forEach((char, index) => {
       const slot = document.createElement('div');
       slot.className = 'letter-slot';
-      slot.dataset.index = index.toString();
-      slot.dataset.letter = letter;
-      if (guessedLetters.has(letter)) {
-        slot.textContent = letter;
+      slot.dataset.index = index;
+      slot.dataset.letter = char;
+      if (guessedLetters.has(char)) {
+        slot.textContent = char;
         slot.classList.add('revealed');
-      } else {
-        // Placeholder for unguessed letters
-        slot.textContent = ''; 
       }
       this.wordDisplayElement.appendChild(slot);
     });
   }
 
-  revealLetterInWordDisplay(letter, indexes) {
-    indexes.forEach(index => {
-      const slot = this.wordDisplayElement?.querySelector(`.letter-slot[data-index="${index}"][data-letter="${letter}"]`);
-      if (slot && !slot.classList.contains('revealed')) {
+  revealLetterInWordDisplay(letter, revealedIndexes) {
+    const slots = this.wordDisplayElement?.querySelectorAll('.letter-slot');
+    slots?.forEach(slot => {
+      if (slot.dataset.letter === letter) {
         slot.textContent = letter;
         slot.classList.add('revealed');
-        // Trigger sparkle animation here
+        // Trigger sparkle animation for revealed letter
         this.lottieLoader.playTemporaryAnimation('sparkle', '/assets/lottie/sparkle.json', slot);
       }
     });
   }
 
-  updateKeyboardKey(letter, isCorrect) {
-    const key = this.keyboardElement?.querySelector(`.key[data-letter="${letter}"]`);
-    if (key) {
-      key.disabled = true;
-      if (isCorrect) {
-        key.classList.add('correct');
-        this.lottieLoader.playTemporaryAnimation('key_correct', '/assets/lottie/key_correct.json', key);
-      } else {
-        key.classList.add('wrong');
-        this.lottieLoader.playTemporaryAnimation('key_incorrect', '/assets/lottie/key_incorrect.json', key); 
-      }
-    }
-  }
-
-  updateScore(score) {
+  updateScore(newScore) {
     if (this.scoreDisplayElement) {
-      this.scoreDisplayElement.textContent = score.toString();
+      this.scoreDisplayElement.textContent = newScore.toString();
     }
   }
 
@@ -95,12 +112,9 @@ export class UI {
     if (this.wrongCountDisplayElement) {
       this.wrongCountDisplayElement.textContent = `${wrongGuesses}/${maxWrongGuesses}`;
     }
-    // Logic for tension meter Lottie will be handled by animations.js
-  }
-
-  // Placeholder for screen transitions, will be expanded in later issues
-  showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId)?.classList.add('active');
+    if (this.tensionFillElement) {
+      const percentage = (wrongGuesses / maxWrongGuesses) * 100;
+      this.tensionFillElement.style.width = `${percentage}%`;
+    }
   }
 }

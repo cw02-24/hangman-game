@@ -6,8 +6,9 @@
 import gsap from 'gsap';
 
 export class AnimationController {
-  constructor(lottieLoader) {
+  constructor(lottieLoader, ui) { // Added ui to constructor
     this.lottieLoader = lottieLoader;
+    this.ui = ui; // Store UI instance
     this.puppetAnimation = null;
     this.confettiAnimation = null;
   }
@@ -135,7 +136,9 @@ export class AnimationController {
     });
 
     // Play victory star
-    this.lottieLoader.load('victory_star', '/assets/lottie/victory.json', {
+    // The SPEC mentions `victory.json` for golden star burst. `index.html` has no dedicated container.
+    // For now, I'll place it in `victory-screen` and adjust its position/styling later if needed.
+    await this.lottieLoader.load('victory_star', '/assets/lottie/victory.json', {
       container: document.querySelector('.victory-title'),
       loop: false,
       autoplay: true
@@ -160,6 +163,14 @@ export class AnimationController {
       opacity: 0,
       duration: 0.5,
       delay: 0.5
+    });
+
+    // GSAP animation for menu button in victory screen
+    gsap.from('#menu-btn-victory', {
+      y: 20,
+      opacity: 0,
+      duration: 0.5,
+      delay: 0.6
     });
   }
 
@@ -197,6 +208,22 @@ export class AnimationController {
       opacity: 0,
       duration: 0.5,
       delay: 1.3
+    });
+
+    // GSAP animation for try again button in game over screen
+    gsap.from('#try-again-btn', {
+      y: 20,
+      opacity: 0,
+      duration: 0.5,
+      delay: 1.5
+    });
+
+    // GSAP animation for menu button in game over screen
+    gsap.from('#menu-btn-gameover', {
+      y: 20,
+      opacity: 0,
+      duration: 0.5,
+      delay: 1.6
     });
   }
 

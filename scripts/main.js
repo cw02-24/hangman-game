@@ -4,13 +4,15 @@
 
 import { Game } from './game.js';
 import { AnimationController } from './animations.js';
-import { LottieLoader } from './lottie-loader.js'; // Corrected import
+import { LottieLoader } from './lottie-loader.js';
+import { UI } from './ui.js'; // Import UI class
 
 class App {
   constructor() {
     this.game = null;
     this.animations = null;
     this.lottieLoader = null;
+    this.ui = null; // Add UI instance
     this.currentScreen = 'loading';
   }
 
@@ -18,14 +20,17 @@ class App {
     // Initialize Lottie loader
     this.lottieLoader = new LottieLoader();
     
+    // Initialize UI
+    this.ui = new UI(this.lottieLoader); // Initialize UI with lottieLoader
+
     // Initialize animation controller
-    this.animations = new AnimationController(this.lottieLoader);
+    this.animations = new AnimationController(this.lottieLoader, this.ui); // Pass UI to animations
     
     // Preload critical animations
     await this.preloadAnimations();
     
     // Initialize game
-    this.game = new Game(this.animations, this.lottieLoader);
+    this.game = new Game(this.animations, this.lottieLoader, this.ui); // Pass UI to game
     
     // Bind events
     this.bindEvents();
@@ -38,9 +43,9 @@ class App {
 
   async preloadAnimations() {
     const animationsToLoad = [
-      { name: 'loading', path: '/assets/lottie/loading.json', container: 'loading-spinner', loop: true }, // Corrected path
-      { name: 'dust', path: '/assets/lottie/dust_particles.json', container: 'dust-layer', loop: true }, // Corrected path
-      { name: 'puppet_idle', path: '/assets/lottie/puppet_states.json', container: 'menu-puppet', loop: true, autoplay: true } // Corrected path
+      { name: 'loading', path: '/assets/lottie/loading.json', container: 'loading-spinner', loop: true },
+      { name: 'dust', path: '/assets/lottie/dust_particles.json', container: 'dust-layer', loop: true },
+      { name: 'puppet_idle', path: '/assets/lottie/puppet_states.json', container: 'menu-puppet', loop: true, autoplay: true }
     ];
 
     for (const anim of animationsToLoad) {
@@ -88,22 +93,13 @@ class App {
   }
 
   async startGame() {
-    this.showScreen('game');
+    this.ui.showScreen('game'); // Use UI class to show screen
     await this.game?.newGame();
   }
 
   showScreen(screenName) {
-    // Hide all screens
-    document.querySelectorAll('.screen').forEach(screen => {
-      screen.classList.remove('active');
-    });
-
-    // Show target screen
-    const screen = document.getElementById(`${screenName}-screen`);
-    if (screen) {
-      screen.classList.add('active');
-      this.currentScreen = screenName;
-    }
+    this.ui.showScreen(`${screenName}-screen`); // Use UI class to show screen
+    this.currentScreen = screenName;
 
     // Screen-specific actions
     if (screenName === 'menu') {

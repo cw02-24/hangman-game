@@ -15,10 +15,10 @@ const WORDS = [
 ];
 
 export class Game {
-  constructor(animations, lottieLoader) {
+  constructor(animations, lottieLoader, ui) { // Added ui to constructor
     this.animations = animations;
     this.lottieLoader = lottieLoader;
-    this.ui = new UI(lottieLoader);
+    this.ui = ui; // Use the passed UI instance
     this.word = '';
     this.guessedLetters = new Set();
     this.wrongGuesses = 0;
@@ -112,7 +112,7 @@ export class Game {
       document.getElementById('victory-score').textContent = this.score.toString(); // Ensure it's a string
       this.animations?.playVictory();
       
-      this.ui.showScreen('victory-screen');
+      this.ui.showScreen('victory'); // Use UI class to show screen
     }, 500);
   }
 
@@ -124,7 +124,7 @@ export class Game {
       document.getElementById('gameover-word').textContent = this.word;
       this.animations?.playGameOver();
       
-      this.ui.showScreen('gameover-screen');
+      this.ui.showScreen('gameover'); // Use UI class to show screen
     }, 1000);
   }
 }
