@@ -29,7 +29,7 @@ export class Game {
     this.tensionFill = null;
   }
 
-  newGame() {
+  async newGame() { // Made async to await loadGamePuppet()
     // Reset state
     this.word = this.getRandomWord();
     this.guessedLetters = new Set();
@@ -48,9 +48,10 @@ export class Game {
     this.renderWord();
     this.updateScore(0);
     this.updateProgress();
-    
-    // Reset puppet animation
-    this.animations?.resetPuppet();
+
+    // Load and reset puppet animation for the game screen
+    await this.animations?.loadGamePuppet();
+    this.animations?.resetPuppet(); // This was already here, but now it will act on the loaded puppet.
     
     console.log('🎯 New game started. Word:', this.word);
   }

@@ -4,7 +4,7 @@
 
 import { Game } from './game.js';
 import { AnimationController } from './animations.js';
-import { LottieLoader } from './lottie-loader.js';
+import { LottieLoader }s from './lottie-loader.js';
 
 class App {
   constructor() {
@@ -54,17 +54,17 @@ class App {
 
   bindEvents() {
     // Menu button
-    document.getElementById('start-btn')?.addEventListener('click', () => {
-      this.startGame();
+    document.getElementById('start-btn')?.addEventListener('click', async () => {
+      await this.startGame();
     });
 
     // Play again buttons
-    document.getElementById('play-again-btn')?.addEventListener('click', () => {
-      this.startGame();
+    document.getElementById('play-again-btn')?.addEventListener('click', async () => {
+      await this.startGame();
     });
 
-    document.getElementById('try-again-btn')?.addEventListener('click', () => {
-      this.startGame();
+    document.getElementById('try-again-btn')?.addEventListener('click', async () => {
+      await this.startGame();
     });
 
     // Menu buttons
@@ -87,9 +87,9 @@ class App {
     });
   }
 
-  startGame() {
+  async startGame() {
     this.showScreen('game');
-    this.game?.newGame();
+    await this.game?.newGame();
   }
 
   showScreen(screenName) {
