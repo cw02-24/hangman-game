@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Shadow Circus Hangman - A dark whimsical word guessing game">
+  <title>Shadow Circus Hangman</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&family=Oswald:wght@700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <!-- Main Menu Screen -->
+  <div id="menu-screen" class="screen active">
+    <div class="background-layers">
+      <div class="layer layer-back" style="background-image: url('/images/backgrounds/circus_tent.jpg')"></div>
+      <div class="dust-layer"></div>
+    </div>
+    
+    <div class="menu-content">
+      <h1 class="game-title">Shadow Circus</h1>
+      <p class="game-subtitle">Hangman</p>
+      
+      <div id="menu-puppet" class="menu-puppet"></div>
+      
+      <button id="start-btn" class="btn btn-primary">
+        <span>Start Game</span>
+      </button>
+      
+      <div class="menu-footer">
+        <p>Guess the word before the strings tighten...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen">
+    <div class="background-layers">
+      <div class="layer layer-back" style="background-image: url('/images/backgrounds/dark_stage.jpg')"></div>
+      <div class="spotlight-layer"></div>
+      <div class="dust-layer"></div>
+    </div>
+    
+    <!-- Score Display -->
+    <div class="score-display">
+      <span class="score-label">Score</span>
+      <span id="score" class="score-value">0</span>
+    </div>
+    
+    <!-- Puppet Container -->
+    <div id="puppet-container" class="puppet-container">
+      <div id="puppet" class="puppet"></div>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-container">
+      <div id="tension-meter" class="tension-meter">
+        <div class="tension-fill"></div>
+      </div>
+      <span id="wrong-count" class="wrong-count">0/5</span>
+    </div>
+    
+    <!-- Word Display (Marquee) -->
+    <div id="word-display" class="word-display">
+      <!-- Letters will be inserted dynamically -->
+    </div>
+    
+    <!-- Keyboard -->
+    <div id="keyboard" class="keyboard">
+      <!-- Keys will be generated dynamically -->
+    </div>
+  </div>
+
+  <!-- Victory Screen -->
+  <div id="victory-screen" class="screen">
+    <div class="background-layers bright">
+      <div class="layer layer-back" style="background-image: url('/images/backgrounds/circus_tent.jpg')"></div>
+      <div id="confetti-container" class="confetti-container"></div>
+    </div>
+    
+    <div id="victory-puppet" class="victory-puppet"></div>
+    
+    <h2 class="result-title victory-title">FREED!</h2>
+    
+    <div class="result-stats">
+      <p>The word was: <strong id="victory-word"></strong></p>
+      <p>Score: <span id="victory-score">0</span></p>
+    </div>
+    
+    <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+    <button id="menu-btn-victory" class="btn btn-secondary">Main Menu</button>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameover-screen" class="screen">
+    <div class="background-layers dark">
+      <div class="layer layer-back" style="background-image: url('/images/backgrounds/dark_stage.jpg')"></div>
+      <div class="curtain-left"></div>
+      <div class="curtain-right"></div>
+    </div>
+    
+    <div id="gameover-puppet" class="gameover-puppet"></div>
+    
+    <h2 class="result-title gameover-title">GAME OVER</h2>
+    
+    <div class="result-stats">
+      <p>The word was: <strong id="gameover-word"></strong></p>
+    </div>
+    
+    <button id="try-again-btn" class="btn btn-primary">Try Again</button>
+    <button id="menu-btn-gameover" class="btn btn-secondary">Main Menu</button>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="screen">
+    <div id="loading-spinner" class="loading-spinner"></div>
+    <p class="loading-text">Loading...</p>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/scripts/main.js"></script>
+</body>
+</html>
